@@ -175,11 +175,11 @@
 ## 6. 更新后的推荐执行顺序
 
 1. **现在就能跑**（零改造）：1-1（`--provider zhipu --model glm-5.3-flash`）→ 1-2 offline-demo → 7-1 Q-learning
-2. **能力实测**：T2（flash 内联搜索）→ T3（Agnes 站点归属）→ T4（Agnes 生图）；T5 条件触发（T2 挂了才需要，方案 C 的执行器）
+2. **能力实测**：T2 ✅ 已通过（flash 内联可用，N5）；**待 key**：T3/T4（需 AGNES_API_KEY 入 `.env`）；T5 条件触发；T6 ⏸️ 被智谱套餐挡（N6）
 3. **1-4**：改写节点 flash（R2 三行 env）→ 生图节点 Agnes（R3 方案 A 三行 env）
 4. **1-2**：方案 C（R4，flash 脑 + 智谱搜索 API）为正选；T2 通过则方案 A 可作快路径对照
 5. **7-2**：R5 只加 zhipu/deepseek 分支，`$env:LLM_PROVIDER="zhipu"` 短测
-6. **1-3**：先跑 T6 探针（智谱 /v1/responses 是否代跑托管工具，10 分钟）——通过则 glm-5.3-flash 直跑（指南 §5.1 决策树）；不通再申请百炼 key 或接受无回执学习版
+6. **1-3**：T6 被智谱 Coding Plan 到期挡住（N6）——续订或注册普通按量 key 后重跑 T6；仍不通则百炼兜底或无回执学习版
 7. MiMo / 火山 codeplan 全部转为可选探索项（T1/E2/E4 保留备查）
 
 ---
@@ -196,6 +196,7 @@
 | N2 | ✅ **智谱确实有 OpenAI Response 协议端点** `https://open.bigmodel.cn/api/v1`——"5.3flash 应该也支持 Responses"在**协议层**成立 | [docs.bigmodel.cn/cn/guide/models/text/glm-5.3](https://docs.bigmodel.cn/cn/guide/models/text/glm-5.3)（三种协议接入表） |
 | N3 | ⚠️ **修正（用户质疑后逐行复核）**：1-3 代码**不锁模型也不锁平台**——`--backend dashscope` 只是第二配置槽（[config.py#L63-L64](file:///e:/Documents/ai-agent-book/chapter1/search-codegen/config.py#L63-L64)，key/base_url/model 全来自 env），`--model` 可直接覆盖（main.py 的 `Config.resolve(args.backend, args.model)`），模型身份检查是"请求==返回"的相对检查（[run_experiment_1_3.py#L120-L125](file:///e:/Documents/ai-agent-book/chapter1/search-codegen/run_experiment_1_3.py#L120-L125)），后端白名单按 flag 名记录（#L51）。真正的硬门槛只有一条：响应含**服务端代跑**的 `web_search_call`/`code_interpreter_call` 回执（#L137-L140；README#L51-L54、L95-L97）——这是平台能力非模型能力；**智谱 `/v1/responses` 是否代跑未验证，T6 探针定夺**：通过则 1-3 全程 flash+智谱，不通才退回百炼 | [agent.py#L65-L76](file:///e:/Documents/ai-agent-book/chapter1/search-codegen/agent.py#L65-L76)（provider 由 base_url 推导；指向智谱时用 OpenAI 风格工具声明）、[README#L95-L97](file:///e:/Documents/ai-agent-book/chapter1/search-codegen/README.md#L95-L97) |
 | N4 | ✅ **1-1 支持 `--model` 且解析层显式优先**：[context/main.py#L1215-L1219](file:///e:/Documents/ai-agent-book/chapter1/context/main.py#L1215-L1219) 定义 `--model`；[resolution.py#L167-L169](file:///e:/Documents/ai-agent-book/agentbook/providers/resolution.py#L167-L169) `if model_clean: resolved_model = model_clean` → 1-1 换 flash **零代码改动**，B2 的 registry 建议降级为可选 | 本地文件重读 |
-| N5 | ⚠️ 1-2 的 flash 内联搜索仍需 T2 实测：百炼能力表说不支持（B4），智谱自有平台未用 flash 演示；**无论 T2 结果如何，方案 C（flash 脑 + 智谱搜索 API）都不受影响** | B4 + 指南 T2/T5 |
+| N5 | ✅ **T2 实测（2026-09-13）**：glm-5.3 与 glm-5.3-flash 在智谱自有平台（paas/v4）**均支持内联 web_search**（当日北京天气实时内容）——B4 的"flash 不支持"系百炼能力表，不适用于智谱自有端点；1-2 方案 A 可直接用 flash。遗留：`annotations` 为空，引用字段位置待定位 | model_tests/t2_zhipu_search.py 实测输出 |
+| N6 | ⏸️ **T6 被套餐挡住（2026-09-13）**：/api/v1 两发探针（web_search + code_interpreter）均 429 `permission_denied`（"GLM Coding Plan 套餐已到期"）→ 现有 key 为 **Coding Plan key 且过期**；"智谱是否代跑托管工具"仍未判定。三选一待本人：续订 / 注册普通按量 key 重测 / 百炼兜底 | model_tests/t6_zhipu_responses.py 实测输出 |
 
 > 本报告为核对快照。仓库文档自身有 drift（如 run_experiment_8_2），遇到与报告冲突时，以**本地文件实际内容 + 实测**为最终裁判。
