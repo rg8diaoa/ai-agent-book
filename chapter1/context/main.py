@@ -689,7 +689,7 @@ def ensure_sample_pdfs():
         try:
             # Run the PDF creation script
             result = subprocess.run(
-                [sys.executable, "create_sample_pdf.py"],
+                [sys.executable, str(Path(__file__).resolve().parent / "create_sample_pdf.py")],
                 capture_output=True,
                 text=True,
                 timeout=10
@@ -1020,7 +1020,7 @@ def interactive_mode(api_key: str, provider: str = "siliconflow", model: str = N
                 print("\n📄 Creating sample PDFs...")
                 try:
                     result = subprocess.run(
-                        [sys.executable, "create_sample_pdf.py"],
+                        [sys.executable, str(Path(__file__).resolve().parent / "create_sample_pdf.py")],
                         capture_output=True,
                         text=True,
                         timeout=10

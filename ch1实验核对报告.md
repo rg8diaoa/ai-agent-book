@@ -1,0 +1,201 @@
+# 第 1 章实验与模型替代 · 核对报告
+
+> 核对日期：2026-09-13
+> 核对方法：本地仓库逐文件重读（Read/Glob/Select-String 全部本日重新取证）+ 官方文档重取（WebFetch/WebSearch）
+> 状态标记：✅ 已证实 ｜ ⚠️ 需修正 ｜ ❌ 已证伪 ｜ ⏳ 待实测
+
+---
+
+## 0. 你的 API Key 清单（本轮对话确认）
+
+| Key | 归属接口 | 状态 |
+|---|---|---|
+| 智谱 GLM | **官方** open.bigmodel.cn | 已配置（ZHIPU_API_KEY，实验 1-1 已跑通） |
+| DeepSeek | **官方** api.deepseek.com | 已持有 |
+| 小米 MiMo | **官方** api.xiaomimimo.com | 已持有 |
+| Agnes | **官方**（国际站 apihub.agnes-ai.com 或国内站 api.agnes-ai.cn，待确认归属，见 E3） | 已持有 |
+| 火山 codeplan | **非标准 ARK API**（编程套餐端点，内含生图模型） | 已持有，API 形态待验证（E2） |
+| Moonshot Kimi / 阿里云百炼 | 未持有 | 1-2 原版依赖；1-3 是否依赖待 T6 实测（见 N3） |
+
+---
+
+## 1. 实验事实核对
+
+### A1 ✅ 第 1 章共 5 个实验，编号 1-1 / 1-2 / 1-3 / 1-4 + 7-1&7-2
+- **引用**：[chapter1/README.md#L25-L31](file:///e:/Documents/ai-agent-book/chapter1/README.md#L25-L31)（1-1 context、1-2 web-search-agent、1-3 search-codegen、1-4 image-gen-workflow、7-1&7-2 learning-from-experience）
+- **验证**：打开该文件看"配套项目"表格，或 `Select-String -Path chapter1\README.md -Pattern "1-1|7-1"`
+
+### A2 ✅ 1-1 消融模式命令与三个输出文件
+- **结论**：`python main.py --provider zhipu --mode ablation`（在 chapter1\context 下）产出 `ablation_study_results.png`、`ablation_study_report.md`、`ablation_results.json`
+- **引用**：[context/main.py#L477](file:///e:/Documents/ai-agent-book/chapter1/context/main.py#L477)（png）、[#L881](file:///e:/Documents/ai-agent-book/chapter1/context/main.py#L881)（md）、[#L826](file:///e:/Documents/ai-agent-book/chapter1/context/main.py#L826)（json 默认名）、[#L812](file:///e:/Documents/ai-agent-book/chapter1/context/main.py#L812)（ablation 入口带 provider 参数）
+- **验证**：`Select-String -Path chapter1\context\main.py -Pattern "ablation_study|ablation_results"`
+
+### A3 ✅ 1-2 是 Kimi 专属（搜索由 Moonshot 托管），offline-demo 无 key 可跑
+- **引用**：
+  - [web-search-agent/README.md#L119](file:///e:/Documents/ai-agent-book/chapter1/web-search-agent/README.md#L119)：`--provider` 仅 `kimi` / `offline-demo` 两值；[#L127-L131](file:///e:/Documents/ai-agent-book/chapter1/web-search-agent/README.md#L127-L131) offline 命令；[#L142-L143](file:///e:/Documents/ai-agent-book/chapter1/web-search-agent/README.md#L142-L143) 单问题与 `--max-steps 3 --output result.json`
+  - [agent.py#L156](file:///e:/Documents/ai-agent-book/chapter1/web-search-agent/agent.py#L156)：`self.formula_uri = "moonshot/web-search:latest"`；[#L238-L239](file:///e:/Documents/ai-agent-book/chapter1/web-search-agent/agent.py#L238-L239)：调用 `/formulas/.../fibers` —— **搜索执行绑定 Moonshot 端点**
+  - [README.md#L279](file:///e:/Documents/ai-agent-book/chapter1/web-search-agent/README.md#L279)：kimi-k3 以 `reasoning_effort=max` 运行，单次 1~数分钟，`SEARCH_TIMEOUT=180`（[#L244](file:///e:/Documents/ai-agent-book/chapter1/web-search-agent/README.md#L244)）
+  - [env.example#L12-L14](file:///e:/Documents/ai-agent-book/chapter1/web-search-agent/env.example#L12-L14)：OpenRouter 兜底**无实时搜索**，不能用于 1-2 验收
+- **推论 ✅（精确化）**：GLM / DeepSeek / Agnes 的 key 都不能"换 key 即用"1-2（Formula 端点与 OpenRouter 兜底均绑 Moonshot）；**但若走"客户端编排"改造（模型发 tool_calls + 代码调任意搜索 API，如智谱独立 Web Search API），DeepSeek/GLM/MiMo 等任何支持 function calling 的模型都能复现 1-2 的 ReAct 循环**——agent.py 的 `search_impl` 注释（L56-L68）即为此扩展点留的说明（实现见《实验前大模型替换指南》R4 方案 C）。MiMo/智谱另有"服务端内联"捷径，但轨迹退化为单次调用（见 B5、矩阵）
+- **验证**：`Select-String -Path chapter1\web-search-agent\agent.py -Pattern "formula|fibers"`
+
+### A4 ✅ 1-3 命令与验收点
+- **引用**：[search-codegen/README.md#L124-L137](file:///e:/Documents/ai-agent-book/chapter1/search-codegen/README.md#L124-L137)（openai 正式命令、dashscope 命令、`--dry-run` 检查请求结构）；[#L51-L54](file:///e:/Documents/ai-agent-book/chapter1/search-codegen/README.md#L51-L54)（验收须有 `web_search_call` + `code_interpreter_call` 回执与 URL 引用）；[#L77-L79](file:///e:/Documents/ai-agent-book/chapter1/search-codegen/README.md#L77-L79)（东盟答案：吉隆坡—新加坡 **316.35 km**）；[#L8](file:///e:/Documents/ai-agent-book/chapter1/search-codegen/README.md#L8)（百炼 qwen3.7-plus 是唯一实测验收后端）
+- **验证**：`python main.py --backend openai --dry-run --request "test"` 不发请求即打印请求体
+
+### A5 ✅（含 2 处修正）1-4 配置与运行
+- **已证实**：
+  - 命令：`pip install -r requirements.txt`（google-genai openai requests python-dotenv）、`python main.py --route workflow`、`--requirement windowsill-plant`、`python -m pytest` —— [image-gen-workflow/README.md#L70-L87](file:///e:/Documents/ai-agent-book/chapter1/image-gen-workflow/README.md#L70-L87)
+  - 架构：改写节点 kimi-k3（**OpenAI 兼容接口**）+ 通义万相 wan2.2-t2i-flash（DashScope 国际站，**异步任务接口**，有轮询参数）—— [README.md#L31-L34](file:///e:/Documents/ai-agent-book/chapter1/image-gen-workflow/README.md#L31-L34)、[config.py#L27-L37](file:///e:/Documents/ai-agent-book/chapter1/image-gen-workflow/config.py#L27-L37)、[#L60-L61](file:///e:/Documents/ai-agent-book/chapter1/image-gen-workflow/config.py#L60-L61)
+  - 海报文案被丢进 negative_prompt 的结论 —— [README.md#L146-L149](file:///e:/Documents/ai-agent-book/chapter1/image-gen-workflow/README.md#L146-L149)
+- **⚠️ 修正 1（我此前遗漏的坑）**：[config.py#L63-L65](file:///e:/Documents/ai-agent-book/chapter1/image-gen-workflow/config.py#L63-L65) 的 `required_env` 含 **GEMINI_API_KEY 和 OPENAI_API_KEY**，且 [main.py#L149](file:///e:/Documents/ai-agent-book/chapter1/image-gen-workflow/main.py#L149) 调用 `Config.validate()` → **即使只跑 workflow 路线，4 个变量也必须非空**（可填占位符）
+- **⚠️ 修正 2（比我之前说的更简单）**：改写节点换 GLM **不用改任何代码**，`.env` 三行即可（因为 [config.py#L27-L29](file:///e:/Documents/ai-agent-book/chapter1/image-gen-workflow/config.py#L27-L29) 就是 OpenAI 兼容配置）：
+  ```env
+  KIMI_API_KEY=<你的ZHIPU_API_KEY>
+  KIMI_BASE_URL=https://open.bigmodel.cn/api/paas/v4
+  REWRITE_MODEL=glm-5.3-flash
+  ```
+  风险点：pipeline 会显式传 temperature（历史失败记录 [README.md#L118-L119](file:///e:/Documents/ai-agent-book/chapter1/image-gen-workflow/README.md#L118-L119)：kimi-k3 拒绝 temperature=0.3），GLM 应接受，跑 1 句需求即验（E5）
+
+### A6 ✅（含 1 处证伪）7-1 / 7-2 命令与 provider 支持
+- **已证实**：
+  - 7-1 离线：`python experiment.py --mode qlearning --rl-episodes 10000 --seed 42`（约 3 秒）—— [README.md#L168-L174](file:///e:/Documents/ai-agent-book/chapter1/learning-from-experience/README.md#L168-L174)
+  - 对比：`python experiment.py --mode both --model kimi-k3`；演示：`python quick_demo.py` —— [README.md#L134-L180](file:///e:/Documents/ai-agent-book/chapter1/learning-from-experience/README.md#L134-L180)
+  - 官方 Kimi K3 首局实测 416.11 秒 / 17 次串行调用 —— [README.md#L204-L207](file:///e:/Documents/ai-agent-book/chapter1/learning-from-experience/README.md#L204-L207)
+  - provider 支持：`LLM_PROVIDER` 仅 **moonshot（默认）/ dashscope / qwen / bailian** + OpenRouter 兜底 —— [env.example#L1-L2](file:///e:/Documents/ai-agent-book/chapter1/learning-from-experience/env.example#L1-L2)、[llm_agent.py#L86-L106](file:///e:/Documents/ai-agent-book/chapter1/learning-from-experience/llm_agent.py#L86-L106)（dashscope 分支走共享 registry，其余硬编码 moonshot）→ **zhipu/deepseek/mimo/agnes 跑 7-2 需在 `__init__` 加分支** ✅
+  - 利好：[llm_agent.py#L19-L24](file:///e:/Documents/ai-agent-book/chapter1/learning-from-experience/llm_agent.py#L19-L24) 温度适配函数注释明确提到 Doubao/DeepSeek —— 作者已预留非 reasoning 模型兼容
+- **❌ 已证伪（我的错误）**：README [#L187](file:///e:/Documents/ai-agent-book/chapter1/learning-from-experience/README.md#L187) 写 `python run_experiment_7_2.py`，但目录里实际文件是 **`run_experiment_8_2.py`**（Glob 证据，另有 `finalize_experiment_8_2.py`）。**以实际文件为准：`python run_experiment_8_2.py`**。这是仓库 README 与文件名的 drift（README 还称本目录为实验 7-1/7-2，文件名却用 8_2，双重编号并存）
+
+### A7 ✅ DashScope 默认是国际站 URL
+- **引用**：[search-codegen/env.example#L18-L21](file:///e:/Documents/ai-agent-book/chapter1/search-codegen/env.example#L18-L21)（`dashscope-intl...`，注释给出中国区地址）、[image-gen-workflow/env.example#L25](file:///e:/Documents/ai-agent-book/chapter1/image-gen-workflow/env.example#L25)、[registry.py#L26-L36](file:///e:/Documents/ai-agent-book/agentbook/providers/registry.py#L26-L36)（共享 registry 默认**中国区**）
+- **验证**：直接打开三个文件对照
+
+---
+
+## 2. 模型能力核对
+
+### B1 ✅ 共享 registry 内置 zhipu（默认模型 glm-5.3）与 deepseek
+- **引用**：[registry.py#L66-L71](file:///e:/Documents/ai-agent-book/agentbook/providers/registry.py#L66-L71)（zhipu→`glm-5.3`，读 ZHIPU_API_KEY）、[#L57-L65](file:///e:/Documents/ai-agent-book/agentbook/providers/registry.py#L57-L65)（deepseek→`deepseek-v4-flash`，读 DEEPSEEK_API_KEY）
+- **验证**：1-1 目录下 `python main.py --provider deepseek` 直接可跑
+
+### B2 ✅ registry 无 agnes / mimo 条目；doubao 只挂 LLM
+- **引用**：[registry.py#L25-L121](file:///e:/Documents/ai-agent-book/agentbook/providers/registry.py#L25-L121)（全表 12 个 provider）；[#L134-L142](file:///e:/Documents/ai-agent-book/agentbook/providers/registry.py#L134-L142) 注释确认**新增一条 entry 即被各章 `--provider` 自动选中**，无需改 argparse
+- **接入建议**（OpenAI 兼容，官方文档证实，见 B5/B6）：
+  ```python
+  "mimo": Provider(
+      name="mimo",
+      base_url="https://api.xiaomimimo.com/v1",
+      default_model="mimo-v2.5-pro",
+      key_vars=("MIMO_API_KEY",),
+  ),
+  "agnes": Provider(
+      name="agnes",
+      base_url="https://apihub.agnes-ai.com/v1",   # 或 api.agnes-ai.cn/v1，按 key 归属（E3）
+      default_model="agnes-3.0-flash",
+      key_vars=("AGNES_API_KEY",),
+  ),
+  ```
+
+### B3 ⚠️（表述需精确化）DeepSeek 与联网搜索
+- **官方 API（api.deepseek.com，你的情况）**：2024-12 官方公告"联网搜索上线**网页端**……目前，**API 暂不支持搜索功能**"—— [api-docs.deepseek.com/zh-cn/news/news1210](https://api-docs.deepseek.com/zh-cn/news/news1210/)；官方更新日志（最新 2026-09-10 V4.1-Flash、2026-08-13 V4-Pro 原生 Responses API）中**无任何托管搜索条目** —— [api-docs.deepseek.com/zh-cn/updates](https://api-docs.deepseek.com/zh-cn/updates/)
+- **新发现（不影响你，但表述要准）**：**阿里云百炼托管路径**的 DeepSeek 在 Responses API 上可挂百炼托管的 `web_search` / `code_interpreter` 工具 —— [help.aliyun.com/zh/model-studio/deepseek-api](https://help.aliyun.com/en/model-studio/deepseek-api)
+- **结论**：你的官方 deepseek key **不能**做 1-2 搜索、**不能**验收 1-3；"DeepSeek 完全没有搜索"的绝对化说法不成立（百炼路径有）
+- **验证**：在上述两页搜索 "web_search"；或对官方 `/responses` 端点实测带 tools（E6）
+
+### B4 ✅ GLM-5.3-Flash 联网搜索"不支持"（权威能力表），但智谱官方搜索工具存在
+- **引用**：
+  - 阿里云百炼能力表（智谱原厂直供页）：**联网搜索：不支持**（Function Calling：支持；1M 上下文）—— [help.aliyun.com/zh/model-studio/glm-5-3-flash-by-zhipu](https://help.aliyun.com/zh/model-studio/glm-5-3-flash-by-zhipu)
+  - 智谱官方联网搜索三件套（Web Search API / Web Search in Chat / Search Agent）存在，官方示例模型是 **glm-5.2**，未用 flash 演示 —— [docs.bigmodel.cn/cn/guide/tools/web-search](https://docs.bigmodel.cn/cn/guide/tools/web-search)
+- **结论**：glm-5.3-**flash** 能否带 `web_search` 工具存在平台间矛盾信号，**不能默认可用，需实测**（脚本见 E1）；若实测失败，用 **glm-5.3 完整版**（同一把官方 key，见 B7）
+- **验证**：跑 E1 脚本看返回；或查 docs.bigmodel.cn 的 glm-5.3-flash 模型页能力表
+
+### B5 ✅ MiMo 有官方托管联网搜索（你的 1-2 最优解）
+- **引用**：
+  - 官方文档：`tools: [{"type": "web_search", "max_keyword": 3, "force_search": true, ...}]`，Base URL `https://api.xiaomimimo.com/v1`，模型 `mimo-v2.5-pro`，**需先在控制台开通"联网服务插件"**；响应内联返回搜索结果与 `url_citation` 引用 —— [platform.xiaomimimo.com/docs/zh-CN/usage-guide/tool-calling/web-search](https://platform.xiaomimimo.com/docs/zh-CN/usage-guide/tool-calling/web-search)
+  - 更新日志：2026-03-03 起 mimo 系列支持联网搜索工具；2026-06-23 兼容 OpenAI Responses API —— [mimo.mi.com/docs/zh-CN/updates/feature](https://mimo.mi.com/docs/zh-CN/updates/feature)
+- **接入 1-2 的要点**：与 Moonshot 的 Formula（tools→fibers 两段式）不同，MiMo 的搜索是**服务端内联**（一次 chat/completions 返回带引用的答案）。改造点在 [agent.py](file:///e:/Documents/ai-agent-book/chapter1/web-search-agent/agent.py) 的搜索实现层（README 标注的 `search_impl()` 扩展点即为此设计）；ReAct 轨迹的"observe"步骤需从 annotations 解析。响应形态先按 E4 实测确认
+- **注意**：官方 curl 示例用的是 `api-key: $MIMO_API_KEY` 请求头（OpenAI SDK 用 `api_key=` 参数等价）
+
+### B6 ⚠️（版本号修正）Agnes 官方模型清单
+- **引用**：
+  - 官方国际站 wiki：OpenAI 兼容；文本 `/chat/completions`、`/responses`、`/messages`；图片 `/images/generations`；视频 `/videos`；Base URL `https://apihub.agnes-ai.com/v1`；key 来自 [platform.agnes-ai.com](https://platform.agnes-ai.com/) —— [wiki.agnes-ai.com/en/docs/overview](https://wiki.agnes-ai.com/en/docs/overview)、[FAQs](https://wiki.agnes-ai.com/en/docs/faqs)（"核心模型无限期免费"）
+  - 文本模型 **agnes-3.0-flash**：512K 上下文，现价 ¥0 —— [wiki.agnes-ai.cn/zh-Hans/docs/agnes-30-flash](https://wiki.agnes-ai.cn/zh-Hans/docs/agnes-30-flash)（注意：该页 Base URL 是**国内站 `https://api.agnes-ai.cn/v1`**——两站并存，你的 key 归属需实测，见 E3）
+  - 图片模型：**agnes-image-2.0-flash**（官方文档页：`POST /v1/images/generations`，`size` 必填如 `1024x1024`，`response_format` 必须放 `extra_body`，当前免费）—— [wiki.agnes-ai.com/en/docs/agnes-image-20-flash](https://wiki.agnes-ai.com/en/docs/agnes-image-20-flash)；tokenplan 表另列 **agnes-image-2.1-flash** —— [wiki.agnes-ai.com/en/docs/tokenplan.md](https://wiki.agnes-ai.com/en/docs/tokenplan.md)
+  - 视频：agnes-video-2.5-flash（ch1 无视频实验，用不上）
+  - 免费层限速：文本 default 有效 20 RPM；图片 1K 有效 20 RPM、2K 有效 10 RPM —— tokenplan 页
+- **⚠️ 修正我之前的说法**：图片模型是 **2.0-flash / 2.1-flash**（我此前写"2.1 / 2.5"有误，2.5 是文本/视频版本号）；Base URL 有**国内外两站**
+- **未验证**：Agnes 是否有托管 web_search 工具——官方文档未见，**不能**当 1-2 搜索用（复验：在 wiki.agnes-ai.com 搜 web_search）
+
+### B7 ✅ glm-5.3 完整版（非 flash）存在，你的官方 key 理论可直接调用
+- **引用**：[registry.py#L69](file:///e:/Documents/ai-agent-book/agentbook/providers/registry.py#L69) 默认模型即 `glm-5.3`；[bigmodel.cn 官网](https://www.bigmodel.cn/)（"GLM-5.3 Latest Flagship Model"）；[发布记录](https://docs.bigmodel.cn/cn/update/new-releases)（2026-08-19 GLM-5.3 上线，1M 上下文）
+- **验证**：1-1 目录 `python main.py --provider zhipu`（默认即 glm-5.3）或 `--model glm-5.3` 显式指定；若账号无权限会报模型不存在
+
+---
+
+## 3. 修正清单（我此前结论中的错误与不精确处）
+
+| # | 原说法 | 核对结果 | 证据 |
+|---|---|---|---|
+| 1 | `python run_experiment_7_2.py` | ❌ 文件不存在，实际是 **`run_experiment_8_2.py`**（README 自身写错） | Glob chapter1/learning-from-experience/*.py；README#L187 |
+| 2 | 1-4 换 GLM 改写节点"要改 config.py + pipeline.py" | ⚠️ 不用改代码，**.env 三行**即可（KIMI_API_KEY / KIMI_BASE_URL / REWRITE_MODEL） | config.py#L27-L29 |
+| 3 | 1-4 只需要 Kimi + DashScope 两个 key | ⚠️ `Config.validate()` 强制 **4 个 key 非空**（含 GEMINI/OPENAI，占位符即可） | config.py#L63-L65、main.py#L149 |
+| 4 | "DeepSeek 没有联网搜索" | ⚠️ 精确化：**官方 API 无**托管搜索（你的情况）；百炼托管路径**有** | news1210、updates、help.aliyun.com |
+| 5 | Agnes 图片模型 2.1/2.5-flash、单一 apihub 站点 | ⚠️ 实为 **2.0-flash / 2.1-flash**；国内站 api.agnes-ai.cn 与国际站 apihub.agnes-ai.com **并存** | wiki.agnes-ai.com、wiki.agnes-ai.cn |
+| 6 | （早前会话）learning-from-experience 是"实验 1.1" | ❌ chapter1/README.md 明确归为 **7-1 & 7-2**（书第 7 章实验） | chapter1/README.md#L31 |
+
+---
+
+## 4. Key × 实验矩阵（最终版）
+
+| 实验 | zhipu | deepseek | **mimo** | agnes | 火山codeplan |
+|---|---|---|---|---|---|
+| **1-1 消融** | ✅ 现成 | ✅ 现成 | ⏳ 加 registry 条目 | ⏳ 加 registry 条目 | —（codeplan ≠ ARK API） |
+| **1-2 联网搜索** | ⏳ 备选：glm-5.3 + 官方 web_search 改造（E1 先测 flash） | ❌ 官方无搜索 | ✅ **最优**：官方托管 web_search，改搜索实现层（E4 先测响应形态） | ❌ 无搜索证据 | ❌ |
+| **1-3 Deep Research** | ❌ | ❌ | ❓ Responses API 托管工具未证实 | ❓ 未证实 | ❌ → 唯一已验收路径是百炼 DashScope（需申请 key） |
+| **1-4 改写节点** | ✅ 三行 env（首选） | ⏳ 同法可行 | ⏳ 可行，注意 temperature/思考模式（E5） | ⏳ 同法可行 | ❌ |
+| **1-4 生图节点** | ❌ | ❌ | ❌ | ✅ `/images/generations` 免费（与 native_gptimage 路线同构，加一条路线的代码） | ⏳ 需先验证 codeplan 生图的 API 形态（E2） |
+| **7-1 Q-learning** | — 离线 | — | — | — | — |
+| **7-2 LLM 臂** | ⏳ llm_agent 加分支 | ⏳ 同（注释已预留兼容） | ⏳ 同（kimi-k3 温度逻辑注意） | ⏳ 同 | ❌ |
+
+---
+
+## 5. 遗留待实测项（每项给出验证路径）
+
+| # | 待验证 | 验证路径 |
+|---|---|---|
+| E1 | glm-5.3-flash 是否真不支持官方 web_search 工具 | 用 zai SDK 发一次带 `tools=[{"type":"web_search",...}]` 的请求（脚本见前一条消息），看返回引用还是报错 |
+| E2 | 火山 codeplan 生图模型能否被代码调用、接口形态（同步 images/generations 还是异步任务） | 登录火山方舟控制台看 codeplan 的 API 接入说明与模型 ID；对照标准 ARK 生图文档；用 curl 发最小请求 |
+| E3 | 你的 Agnes key 属于国际站还是国内站 | 分别对 `https://apihub.agnes-ai.com/v1` 与 `https://api.agnes-ai.cn/v1` 用该 key 发一次最小 chat 请求（model=agnes-3.0-flash），通的那个就是归属站 |
+| E4 | MiMo web_search 的响应形态（离散 tool_calls 还是内联 annotations） | 按[官方文档](https://platform.xiaomimimo.com/docs/zh-CN/usage-guide/tool-calling/web-search) curl 示例发一次，打印完整 response JSON；先在控制台开通联网服务插件 |
+| E5 | mimo/agnes/glm 作 1-4 改写节点时 temperature 与思考模式的兼容性 | 配好三行 env 后 `python main.py --route workflow --requirement windowsill-plant` 只跑一句 |
+| E6 | DeepSeek 官方 Responses API 是否带托管 web_search | 在 [api-docs.deepseek.com](https://api-docs.deepseek.com/zh-cn/updates/) 搜 web_search；或对官方 /responses 端点实测带 tools |
+
+---
+
+## 6. 更新后的推荐执行顺序
+
+1. **现在就能跑**（零改造）：1-1（`--provider zhipu --model glm-5.3-flash`）→ 1-2 offline-demo → 7-1 Q-learning
+2. **能力实测**：T2（flash 内联搜索）→ T3（Agnes 站点归属）→ T4（Agnes 生图）；T5 条件触发（T2 挂了才需要，方案 C 的执行器）
+3. **1-4**：改写节点 flash（R2 三行 env）→ 生图节点 Agnes（R3 方案 A 三行 env）
+4. **1-2**：方案 C（R4，flash 脑 + 智谱搜索 API）为正选；T2 通过则方案 A 可作快路径对照
+5. **7-2**：R5 只加 zhipu/deepseek 分支，`$env:LLM_PROVIDER="zhipu"` 短测
+6. **1-3**：先跑 T6 探针（智谱 /v1/responses 是否代跑托管工具，10 分钟）——通过则 glm-5.3-flash 直跑（指南 §5.1 决策树）；不通再申请百炼 key 或接受无回执学习版
+7. MiMo / 火山 codeplan 全部转为可选探索项（T1/E2/E4 保留备查）
+
+---
+
+## 7. 最终选型定稿（2026-09-13，用户拍板 + 本轮补证）
+
+**定稿**：文本全部换 **glm-5.3-flash**（1-1 / 1-2 / 1-4 改写 / 7-2），生图换 **agnes-image-2.0-flash**（1-4），**1-3 唯一例外**保留百炼原模型（补 DASHSCOPE key）。执行细节见《实验前大模型替换指南》§0.1 与 §5.1。
+
+本轮新增证据（相对 §1/§2 的增量）：
+
+| # | 新结论 | 证据 |
+|---|---|---|
+| N1 | ✅ glm-5.3-flash **确为原生多模态**（GLM-5 系列首个；输入视频/图像/文本/文件，1M 上下文，Model Code 即 `glm-5.3-flash`，FC 支持，官方推荐 temperature=1 / top_p=0.95 / reasoning_effort=max，thinking 仅支持 enabled）——"5.3flash 本身也有多模态"属实；但本章 5 个实验无一需要文本模型的多模态能力，不构成替换约束 | [docs.bigmodel.cn/cn/guide/models/vlm/glm-5.3-flash](https://docs.bigmodel.cn/cn/guide/models/vlm/glm-5.3-flash)、[价格页](https://bigmodel.cn/pricing)（输入 0.8 / 输出 2.8 元每 M） |
+| N2 | ✅ **智谱确实有 OpenAI Response 协议端点** `https://open.bigmodel.cn/api/v1`——"5.3flash 应该也支持 Responses"在**协议层**成立 | [docs.bigmodel.cn/cn/guide/models/text/glm-5.3](https://docs.bigmodel.cn/cn/guide/models/text/glm-5.3)（三种协议接入表） |
+| N3 | ⚠️ **修正（用户质疑后逐行复核）**：1-3 代码**不锁模型也不锁平台**——`--backend dashscope` 只是第二配置槽（[config.py#L63-L64](file:///e:/Documents/ai-agent-book/chapter1/search-codegen/config.py#L63-L64)，key/base_url/model 全来自 env），`--model` 可直接覆盖（main.py 的 `Config.resolve(args.backend, args.model)`），模型身份检查是"请求==返回"的相对检查（[run_experiment_1_3.py#L120-L125](file:///e:/Documents/ai-agent-book/chapter1/search-codegen/run_experiment_1_3.py#L120-L125)），后端白名单按 flag 名记录（#L51）。真正的硬门槛只有一条：响应含**服务端代跑**的 `web_search_call`/`code_interpreter_call` 回执（#L137-L140；README#L51-L54、L95-L97）——这是平台能力非模型能力；**智谱 `/v1/responses` 是否代跑未验证，T6 探针定夺**：通过则 1-3 全程 flash+智谱，不通才退回百炼 | [agent.py#L65-L76](file:///e:/Documents/ai-agent-book/chapter1/search-codegen/agent.py#L65-L76)（provider 由 base_url 推导；指向智谱时用 OpenAI 风格工具声明）、[README#L95-L97](file:///e:/Documents/ai-agent-book/chapter1/search-codegen/README.md#L95-L97) |
+| N4 | ✅ **1-1 支持 `--model` 且解析层显式优先**：[context/main.py#L1215-L1219](file:///e:/Documents/ai-agent-book/chapter1/context/main.py#L1215-L1219) 定义 `--model`；[resolution.py#L167-L169](file:///e:/Documents/ai-agent-book/agentbook/providers/resolution.py#L167-L169) `if model_clean: resolved_model = model_clean` → 1-1 换 flash **零代码改动**，B2 的 registry 建议降级为可选 | 本地文件重读 |
+| N5 | ⚠️ 1-2 的 flash 内联搜索仍需 T2 实测：百炼能力表说不支持（B4），智谱自有平台未用 flash 演示；**无论 T2 结果如何，方案 C（flash 脑 + 智谱搜索 API）都不受影响** | B4 + 指南 T2/T5 |
+
+> 本报告为核对快照。仓库文档自身有 drift（如 run_experiment_8_2），遇到与报告冲突时，以**本地文件实际内容 + 实测**为最终裁判。
