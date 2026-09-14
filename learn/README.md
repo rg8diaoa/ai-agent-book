@@ -22,6 +22,7 @@
 | `chN/contracts.py`、`chN/run.py` | 运行适配层（上游契约槽位注入 + 统一启动器） |
 | `router/` | 任务模型路由（`model_config.json` + `model_router.py`） |
 | `infra/` | 探测公共设施（probe_utils）+ 第二轨验收（acceptance_router）+ 路由冒烟（t10） |
+| `HANDOFF.md` | 会话交接文档（新会话 AI 协作者的最小完备上下文，随状态更新） |
 
 ## task ↔ ch 映射表（课程节奏）
 
