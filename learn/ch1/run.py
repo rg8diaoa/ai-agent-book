@@ -11,6 +11,7 @@ import json
 import os
 import subprocess
 import sys
+import threading
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -54,31 +55,65 @@ def main() -> int:
     cwd = entry.parent
     cmd = [sys.executable, str(entry)] + passthrough
 
+    child_env = {**os.environ, "PYTHONIOENCODING": "utf-8"}
+    for stream in (sys.stdout, sys.stderr):
+        if hasattr(stream, "reconfigure"):
+            try:
+                stream.reconfigure(errors="replace")
+            except (ValueError, OSError):
+                pass
+
     print(f"[adapter] exp={args.exp} cwd={cwd}")
     print("[adapter] 契约 env 注入完成（真实 provider/model 见 evidence json）")
     if args.evidence:
-        proc = subprocess.run(cmd, cwd=str(cwd), env={**os.environ},
-                              capture_output=True, text=True, timeout=1800)
+        out_buf: list = []
+        err_buf: list = []
+
+        def _pump(stream, sink, to_stderr=False):
+            for line in stream:
+                sink.append(line)
+                print(line, end="", file=sys.stderr if to_stderr else sys.stdout)
+
+        with subprocess.Popen(cmd, cwd=str(cwd), env=child_env,
+                              stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                              text=True, encoding="utf-8", errors="replace") as proc:
+            t_out = threading.Thread(target=_pump, args=(proc.stdout, out_buf), daemon=True)
+            t_err = threading.Thread(target=_pump, args=(proc.stderr, err_buf, True), daemon=True)
+            t_out.start()
+            t_err.start()
+            try:
+                proc.wait(timeout=1800)
+            except subprocess.TimeoutExpired:
+                proc.kill()
+                proc.wait()
+            except KeyboardInterrupt:
+                proc.kill()
+                proc.wait()
+                raise
+            t_out.join(timeout=30)
+            t_err.join(timeout=30)
+
         EVIDENCE_DIR.mkdir(parents=True, exist_ok=True)
         ts = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%S")
         out = EVIDENCE_DIR / f"{ts}_run_{args.exp}.json"
         env_summary = {k: v for k, v in os.environ.items()
                        if k in ("LLM_PROVIDER", "MODEL_NAME")
                        or k.endswith(("_MODEL",)) and not k.endswith("API_KEY")}
+        stdout_all = "".join(out_buf)
+        stderr_all = "".join(err_buf)
         out.write_text(json.dumps({
             "kind": "variant", "exp": args.exp, "cmd": cmd,
             "routes": env_summary,
             "exit_code": proc.returncode,
-            "stdout_tail": proc.stdout[-2000:], "stderr_tail": proc.stderr[-1000:],
+            "stdout_tail": stdout_all[-2000:], "stderr_tail": stderr_all[-1000:],
             "generated_utc": datetime.now(timezone.utc).isoformat(),
         }, ensure_ascii=False, indent=2, default=str), encoding="utf-8")
         print(f"🧾 证据已写 {out.relative_to(ROOT)}")
-        print(proc.stdout[-3000:])
         if proc.returncode != 0:
-            print(proc.stderr[-1500:], file=sys.stderr)
+            print(f"[adapter] 子进程 exit={proc.returncode}，详见上方输出与证据 json", file=sys.stderr)
         return proc.returncode
 
-    proc = subprocess.run(cmd, cwd=str(cwd), env={**os.environ})
+    proc = subprocess.run(cmd, cwd=str(cwd), env=child_env)
     return proc.returncode
 
 
