@@ -9,7 +9,7 @@
 |---|---|---|
 | 实验代码与配置（`chapter1/**`、`agentbook/**` 等课程目录的修改） | **本人** | 加 provider 分支、改实验配置、跑 `run_experiment_*.py`、实验代码改造 |
 | 学习笔记 / 心得（`learn/chN/notes/**`） | **本人撰写**；AI 只做格式建议，不代写观点 | CC_Task0学习心得 |
-| 能力探测与测试（`learn/chN/probes/**`、`learn/infra/**`） | **AI 可全代办** | T 系列模型能力测试、API 形态验证、运行测试并判读 |
+| 能力探测与测试（`learn/chN/probes/**`、`learn/infra/**`） | **AI 可代办**  | T 系列模型能力测试、API 形态验证、运行测试并判读 |
 | 资料核对与文档（`*.md` 指南/报告） | AI 起草、本人审定 | 每条结论必须带 文件:行号 或官方 URL；不确定先实测 |
 | git 提交 | 仅在本人明确说"提交"时执行 | push 需单独确认 |
 
@@ -25,8 +25,8 @@
 
 ## 3. 环境备忘（实测得出，供后续 agent 免踩坑）
 
-- Python 一律走项目虚拟环境：`.venv\Scripts\python.exe`；**不要用 `uv run`**——沙箱不允许 uv 写工作区外的缓存目录（`E:\Documents\.uv-cache`，os error 5）。
-- 根 `.env` 当前 key 清单：`ZHIPU_API_KEY`（按量计费；`/api/v1` Responses 端点仅对 Coding Plan 开放）、`AGNES_API_KEY`（归属 `https://apihub.agnes-ai.com/v1`）、`MIMO_API_KEY`（chat 内联搜索可用）、`DASHSCOPE_API_KEY`（百炼按量已充值，托管工具按量可用，T11 实测连通）。待补：`DEEPSEEK_API_KEY`（可选备胎）。
+- Python 一律走项目虚拟环境：`.venv\Scripts\python.exe`；**不要用 `uv run`**——本机沙箱实测：uv 无法写工作区外的缓存目录（`E:\Documents\.uv-cache`，os error 5）。
+- 根 `.env` key 清单：`ZHIPU_API_KEY`、`AGNES_API_KEY`、`MIMO_API_KEY`、`DASHSCOPE_API_KEY`（各家计费方式/套餐限制以各自控制台与实测为准，见[模型能力核对报告.md](learn/ch1/notes/research/模型能力核对报告.md)）；待补：`DEEPSEEK_API_KEY`（可选备胎）。
 - `.venv` 内已装：openai / requests / python-dotenv。
 - 仓库 README 与实际文件偶有 drift（如 `run_experiment_8_2.py`），行号引用允许 ±几行偏差。
 
