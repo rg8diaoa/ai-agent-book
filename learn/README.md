@@ -23,12 +23,21 @@
 | `router/` | 任务模型路由（`model_config.json` + `model_router.py`） |
 | `infra/` | 探测公共设施（probe_utils）+ 第二轨验收（acceptance_router）+ 路由冒烟（t10） |
 
-## task ↔ ch 映射表
+## task ↔ ch 映射表（课程节奏）
 
-| task | 覆盖章节/实验 | 产物位置 |
-|---|---|---|
-| task0 模型路由准备 | ch1 全部实验（1-1 context / 1-2 web-search-agent / 1-3 search-codegen / 1-4 image-gen-workflow / 7-1&7-2 learning-from-experience）+ 探测 t1–t12 | `ch1/notes/`、`ch1/probes/`、`router/`、`infra/` |
-| learn-repo 建仓与整改 | 仓库级（learn 容器结构、适配层、保真机制） | 本 README + `ch1/notes/guides/学习记录仓整改与发布方案.md` |
+> 开营 2026-09-14 ｜ 任务周期 09-17 → 10-05（19 天）｜ ⚠️ **未按时完成 Task 会被报离群**，且截止时间均为**凌晨 03:00**，请提前完成。
+> Task→章节按任务主题与书目录对应，如有出入以课程官方任务卡为准。
+
+| Task | 主题 | 对应章节 | 截止 | 状态 | 产物位置 |
+|---|---|---|---|---|---|
+| Task 0 | Agent 基础与环境准备 | ch1（实验 1-1 / 1-2 / 1-3 / 1-4 / 7-1&7-2）+ 探测 t1–t12 | 09-17 | ✅ | `ch1/notes/`、`ch1/probes/`、`router/`、`infra/` |
+| Task 1 | 上下文工程与 Memory / RAG | ch2（上下文工程）+ ch3（用户记忆与知识库） | 09-20 | ⏳ | `ch2/`、`ch3/`（待建） |
+| Task 2 | Tools 与 MCP | ch4（工具与 MCP 协议） | 09-23 | ⏳ | `ch4/`（待建） |
+| Task 3 | Coding Agent 与 Agent 交互 | ch5（Coding Agent 与通用 Agent）+ ch6（交互扩展） | 09-26 | ⏳ | `ch5/`、`ch6/`（待建） |
+| Task 4 | Agent Evaluation 与模型能力优化 | ch7（评估）+ ch8（模型后训练） | 09-29 | ⏳ | `ch7/`、`ch8/`（待建） |
+| Task 5 | Agent 持续进化与 Multi-Agent | ch9（持续进化）+ ch10（多 Agent 协作） | 10-02 | ⏳ | `ch9/`、`ch10/`（待建） |
+| Task 6 | 共学总结 | 跨章总结 | 10-05 | ⏳ | 总结笔记（位置待定） |
+| learn-repo | 建仓与整改 | 仓库级（learn 容器结构、适配层、保真机制） | — | ✅ | 本 README + `ch1/notes/guides/学习记录仓整改与发布方案.md` |
 
 ## 运行适配层
 
