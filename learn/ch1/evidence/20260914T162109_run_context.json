@@ -1,0 +1,21 @@
+{
+  "kind": "variant",
+  "exp": "context",
+  "cmd": [
+    "E:\\Documents\\ai-agent-book\\.venv\\Scripts\\python.exe",
+    "E:\\Documents\\ai-agent-book\\chapter1\\context\\main.py",
+    "--provider",
+    "zhipu",
+    "--model",
+    "glm-5.3-flash",
+    "--mode",
+    "ablation"
+  ],
+  "routes": {
+    "MODEL_NAME": "glm-5.3-flash"
+  },
+  "exit_code": 0,
+  "stdout_tail": "--+-------------+---------+--------------+--------------+-------------------+----------------+\n\n================================================================================\nCOMPARISON MATRIX (rows = context mode, cols = case; cell = outcome it=iterations tc=tool calls)\n  ✓ terminal response   ⚠ terminal response built on figures no observation supports   ✗ no terminal response\n================================================================================\n+-----------------+------------------------+\n| Context Mode    | Multinational Budget   |\n+=================+========================+\n| full            | ✓ 3it/7tc              |\n+-----------------+------------------------+\n| no_history      | ✗ 10it/47tc            |\n+-----------------+------------------------+\n| no_reasoning    | ✓ 3it/6tc              |\n+-----------------+------------------------+\n| no_tool_calls   | ⚠ 1it/0tc              |\n+-----------------+------------------------+\n| no_tool_results | ⚠ 5it/10tc             |\n+-----------------+------------------------+\n\n================================================================================\nANALYSIS SUMMARY\n================================================================================\nTerminal Response Rate: 4/5\n\nContext Mode Impacts:\n\nNO_HISTORY:\n  - Completion Maintained: False\n  - Execution Time Delta: 36.90s\n  - Iteration Delta: 7\n  - Tool Call Delta: 40\n  - Failure Reason: May repeat actions or lose track of progress\n\nNO_REASONING:\n  - Completion Maintained: True\n  - Execution Time Delta: 7.47s\n  - Iteration Delta: 0\n  - Tool Call Delta: -1\n\nNO_TOOL_CALLS:\n  - Completion Maintained: True\n  - Execution Time Delta: -31.17s\n  - Iteration Delta: -2\n  - Tool Call Delta: -7\n  - Failure Reason: Answered with figures no tool observation supports\n\nNO_TOOL_RESULTS:\n  - Completion Maintained: True\n  - Execution Time Delta: 118.14s\n  - Iteration Delta: 2\n  - Tool Call Delta: 3\n  - Failure Reason: Answered with figures no tool observation supports\n",
+  "stderr_tail": "5 00:18:49,978 - INFO - Iteration 5/10\n2026-09-15 00:18:49,978 - INFO - Sending request to zhipu API\n2026-09-15 00:21:07,012 - INFO - HTTP Request: POST https://open.bigmodel.cn/api/paas/v4/chat/completions \"HTTP/1.1 200 OK\"\n2026-09-15 00:21:07,030 - INFO - Terminal text response (no tool calls); stopping after iteration 5\n2026-09-15 00:21:07,030 - INFO - Test completed in 180.05s\n2026-09-15 00:21:07,030 - INFO - Terminal response completed: True\n2026-09-15 00:21:07,030 - WARNING - Answer states 10 figure(s) with no observation behind them: [11992620.0, 2398524.0, 2300000.0, 1656000.0, 349600000.0, 1932000.0, 2944000.0, 11033210.4, 959409.6, 3840000.0]\n2026-09-15 00:21:07,030 - INFO - Tool calls made: 10\n2026-09-15 00:21:07,030 - INFO - Iterations: 5\n2026-09-15 00:21:09,374 - INFO - Visualization saved as 'ablation_study_results.png'\n2026-09-15 00:21:09,374 - INFO - Report saved as 'ablation_study_report.md'\n2026-09-15 00:21:09,375 - INFO - Raw results saved as 'ablation_results.json'\n",
+  "generated_utc": "2026-09-14T16:21:09.574949+00:00"
+}
