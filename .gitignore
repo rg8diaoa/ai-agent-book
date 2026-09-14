@@ -77,3 +77,6 @@ ablation_study_results.png
 /chapter7/user-memory-system-evaluation/results/checkpoints/*
 !/chapter7/user-memory-system-evaluation/results/checkpoints/7_11/
 !/chapter7/user-memory-system-evaluation/results/checkpoints/7_11/**
+
+# 第二轨路由变体证据：json 入库，生成的图片不入库（可由脚本重生成）
+model_tests/evidence_variant/*.png
