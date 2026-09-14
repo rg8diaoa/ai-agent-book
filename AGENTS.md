@@ -19,21 +19,23 @@
 2. **不代替思考**：机制类问题解释原理 + 给验证路径，不直接给"做完的作业"。
 3. **密钥安全**：key 只存根 `.env`（已被 .gitignore 忽略）；任何回复、日志、提交中不得出现密钥明文；查看 `.env` 只提取变量名，不输出值。
 4. **测试脚本**（`model_tests/**`）只从环境变量读 key，不得硬编码。
-5. **改动最小**：课程实验原文件尽量不动——替换类实现放独立脚本（如 1-2 的 `main_react_search.py`），保证与上游仓库可对照、可回退。
+5. **行为保真 + 加法扩展 + 证据分轨**：课程实验原文件的原 flag/默认行为不变；扩展一律用加法（新 flag 如 1-1 `--provider router`、新分支如 7-2 router、新脚本如 1-2 `main_route.py`）；验收证据分两轨——作者基线（`chapter1/**/validation/` + 锚定 runner）与路由变体（`model_tests/infra/acceptance_router.py` 产出的 `evidence_variant_*`）永不混同、变体不冒充基线。
+6. **产物归位**：学习/研究类 md 产物一律写入 `docs/cc_learn/<task-id>/{guides,research}/`（guides=操作手册，research=证据核对），不在仓库根或其它目录散落。
+7. **命名规范**：实验代码的配置字段前缀 = 任务路由名大写（如 `IMAGE_WORKFLOW_API_KEY` ← 路由 `image_workflow`）；字段名回答"配置从哪来"，函数名回答"拿来干什么"；模型/厂商名禁止进入代码标识符（模型身份只存在于 `agentbook/model_config.json`）。
 
 ## 3. 环境备忘（实测得出，供后续 agent 免踩坑）
 
 - Python 一律走项目虚拟环境：`.venv\Scripts\python.exe`；**不要用 `uv run`**——沙箱不允许 uv 写工作区外的缓存目录（`E:\Documents\.uv-cache`，os error 5）。
-- 根 `.env` 当前 key 清单：`ZHIPU_API_KEY`（GLM Coding Plan key；2026-09-13 时已到期，影响 `/api/v1` 端点，paas/v4 不受影响）。待本人补充：`AGNES_API_KEY`（+`AGNES_BASE_URL`）、`MIMO_API_KEY`。
+- 根 `.env` 当前 key 清单：`ZHIPU_API_KEY`（按量计费；`/api/v1` Responses 端点仅对 Coding Plan 开放）、`AGNES_API_KEY`（归属 `https://apihub.agnes-ai.com/v1`）、`MIMO_API_KEY`（chat 内联搜索可用）、`DASHSCOPE_API_KEY`（百炼按量已充值，托管工具按量可用，T11 实测连通）。待补：`DEEPSEEK_API_KEY`（可选备胎）。
 - `.venv` 内已装：openai / requests / python-dotenv。
 - 仓库 README 与实际文件偶有 drift（如 `run_experiment_8_2.py`），行号引用允许 ±几行偏差。
 
 ## 4. 规则指针
 
-- 模型替换与测试手册：[实验前大模型替换指南.md](实验前大模型替换指南.md)（T 测试 → R 替换 → V 验证；§0.1 定稿、§5.1 决策树）
-- 结论证据库：[ch1实验核对报告.md](ch1实验核对报告.md)（A/B/N 编号，全部带引用与验证路径）
+- 模型路由与实验替换手册：[模型路由与实验替换指南.md](docs/cc_learn/task0/guides/模型路由与实验替换指南.md)（判据总表 → 路由层搭建 model_config.json / model_router.py → 逐实验接线 → 执行顺序清单）；实验代码引用路由一律 `from agentbook.model_router import resolve`，禁止出现厂商名/URL/key
+- 结论证据库：[模型能力核对报告.md](docs/cc_learn/task0/research/模型能力核对报告.md)（A/B/N 编号，全部带引用与验证路径）
 - 课程背景：[chapter1/README.md](chapter1/README.md)（实验 1-1 / 1-2 / 1-3 / 1-4 / 7-1&7-2）
-- 测试脚本：`model_tests/`（t1_mimo · t2_zhipu_search · t3_agnes_site · t4_agnes_image · t6_zhipu_responses）
+- 测试脚本：`model_tests/`（`ch1/` = t1–t12 探测；`infra/` = acceptance_router 第二轨验收 + probe_utils 公共设施 + t10 路由冒烟；`evidence_variant/` = 第二轨证据；目录与命名约定见 model_tests/README.md）
 
 ## 5. 记忆机制（当前方案）
 
