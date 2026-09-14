@@ -689,7 +689,7 @@ def ensure_sample_pdfs():
         try:
             # Run the PDF creation script
             result = subprocess.run(
-                [sys.executable, str(Path(__file__).resolve().parent / "create_sample_pdf.py")],
+                [sys.executable, "create_sample_pdf.py"],
                 capture_output=True,
                 text=True,
                 timeout=10
@@ -1020,7 +1020,7 @@ def interactive_mode(api_key: str, provider: str = "siliconflow", model: str = N
                 print("\n📄 Creating sample PDFs...")
                 try:
                     result = subprocess.run(
-                        [sys.executable, str(Path(__file__).resolve().parent / "create_sample_pdf.py")],
+                        [sys.executable, "create_sample_pdf.py"],
                         capture_output=True,
                         text=True,
                         timeout=10
@@ -1208,9 +1208,9 @@ def main():
     )
     parser.add_argument(
         "--provider",
-        choices=[*SUPPORTED_PROVIDERS, "router"],
+        choices=SUPPORTED_PROVIDERS,
         default="doubao",
-        help="LLM 提供商（默认：doubao；openrouter 或缺失主 key 时经 OpenRouter 兜底；ollama 为本地免费；router=经任务路由 text_only 取 provider/model/key）"
+        help="LLM 提供商（默认：doubao；openrouter 或缺失主 key 时经 OpenRouter 兜底；ollama 为本地免费）"
     )
     parser.add_argument(
         "--model",
@@ -1230,15 +1230,6 @@ def main():
 
     args = parser.parse_args()
     
-    if args.provider == "router":
-        from agentbook.model_router import resolve
-
-        cfg = resolve("text_only")
-        print(f"[router] text_only -> {cfg['provider']}/{cfg['model']}")
-        args.provider = cfg["provider"]
-        args.model = args.model or cfg["model"]
-        args.api_key = args.api_key or cfg["api_key"]
-
     # The registry knows each provider's key variables, the OpenRouter fallback
     # and which providers need no key at all, so resolve through it rather than
     # maintaining a per-provider chain here. An explicit --api-key still wins.

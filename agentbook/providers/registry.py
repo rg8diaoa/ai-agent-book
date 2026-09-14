@@ -66,7 +66,7 @@ PROVIDERS: dict[str, Provider] = {
     "zhipu": Provider(
         name="zhipu",
         base_url="https://open.bigmodel.cn/api/paas/v4",
-        default_model="glm-5.3",
+        default_model="glm-5.2",
         key_vars=("ZHIPU_API_KEY",),
     ),
     "krill": Provider(

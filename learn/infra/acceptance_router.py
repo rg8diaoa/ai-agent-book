@@ -1,11 +1,11 @@
-"""第二轨验收（路由变体）：用路由配置跑各实验核心流程，产出 evidence_variant_*。
+"""第二轨验收（路由变体）：用 learn/router 路由配置跑各实验核心流程，产出 evidence_*。
 
 与作者基线分轨记录、永不混同：
 - 第一轨：chapter1/**/validation/（作者 kimi/moonshot/qwen 观测，锚定 runner 产出）
-- 第二轨：model_tests/evidence_variant/（路由 provider/model + 耗时 + 产物摘要）
+- 第二轨：learn/ch1/evidence/（路由 provider/model + 耗时 + 产物摘要；经 learn/ch1/contracts.py 契约注入）
 用法：
-  python model_tests/acceptance_router.py builtin|react|workflow|native|llm|all
-  python model_tests/acceptance_router.py workflow --requirement "一段自定义需求文本"
+  .venv\\Scripts\\python.exe learn\\infra\\acceptance_router.py builtin|react|workflow|native|llm|all
+  .venv\\Scripts\\python.exe learn\\infra\\acceptance_router.py workflow --requirement "一段自定义需求文本"
 """
 import argparse
 import hashlib
@@ -18,7 +18,14 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
-OUT_DIR = ROOT / "model_tests" / "evidence_variant"
+OUT_DIR = ROOT / "learn" / "ch1" / "evidence"
+
+
+def _contracts_env(exp: str) -> dict:
+    sys.path.insert(0, str(ROOT))
+    from learn.ch1 import contracts
+
+    return contracts.apply_env(exp)
 
 QUESTION_1_2 = "现在比特币的价格是多少美元？"
 DEFAULT_REQUIREMENT = "A focused AGI programmer coding late at night, dual monitors glowing, warm desk lamp"
@@ -44,7 +51,7 @@ def _truncate(obj, limit: int = 800):
 
 
 def run_builtin() -> dict:
-    sys.path.insert(0, str(ROOT / "chapter1" / "web-search-agent"))
+    sys.path.insert(0, str(ROOT / "learn" / "ch1" / "variants" / "web-search-agent"))
     from main_route import run_builtin as _run
 
     started = time.time()
@@ -53,7 +60,7 @@ def run_builtin() -> dict:
 
 
 def run_react() -> dict:
-    sys.path.insert(0, str(ROOT / "chapter1" / "web-search-agent"))
+    sys.path.insert(0, str(ROOT / "learn" / "ch1" / "variants" / "web-search-agent"))
     from main_route import run_react as _run
 
     started = time.time()
@@ -88,6 +95,10 @@ def _recent_pngs() -> list:
 
 
 def _run_image_route(route: str, requirement: str) -> dict:
+    sys.path.insert(0, str(ROOT))
+    from learn.ch1 import contracts
+
+    contracts.apply_env("image-gen-workflow")
     sys.path.insert(0, str(ROOT / "chapter1" / "image-gen-workflow"))
     from dotenv import load_dotenv
 
@@ -117,7 +128,7 @@ def run_llm() -> dict:
     proc = subprocess.run(
         [sys.executable, "experiment.py", "--mode", "llm", "--llm-episodes", "1"],
         cwd=ROOT / "chapter1" / "learning-from-experience",
-        env={**os.environ, "LLM_PROVIDER": "router"},
+        env={**os.environ, **_contracts_env("learning-from-experience")},
         capture_output=True, text=True, timeout=900,
     )
     return {

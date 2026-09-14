@@ -6,13 +6,17 @@ react:   多轮编排，脑=text_only 路由、执行器=web_search_api 路由�
 """
 import argparse
 import json
+import sys
 import time
+from pathlib import Path
 
 import requests
 from dotenv import load_dotenv
 from openai import OpenAI
 
-from agentbook.model_router import resolve
+sys.path.insert(0, str(Path(__file__).resolve().parents[4]))   # …/learn/ch1/variants/web-search-agent → ROOT
+
+from learn.router import resolve
 
 load_dotenv()
 

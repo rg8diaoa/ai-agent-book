@@ -1,10 +1,10 @@
-"""probe_utils — 探测脚本公共设施（model_tests/infra）。
+"""probe_utils — 探测脚本公共设施（learn/infra）。
 
-chN/ 下新探测的样板：
+learn/chN/probes/ 下新探测的样板：
     import sys
     from pathlib import Path
-    sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "model_tests" / "infra"))
-    from probe_utils import require_key, post_json, responses_receipt_types, head
+    sys.path.insert(0, str(Path(__file__).resolve().parents[3]))   # probes→chN→learn→ROOT
+    from learn.infra.probe_utils import require_key, post_json, responses_receipt_types, head
 
 职责：密钥装载与断言 / SDK 响应 json 化 / 截断打印 / HTTP POST 探针 / 回执类型提取。
 """

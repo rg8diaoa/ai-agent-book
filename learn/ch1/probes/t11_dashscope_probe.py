@@ -1,5 +1,10 @@
-"""T11: DashScope 按量 key 最小探测（经路由 deep_research）。不跑实验本体。"""
-from agentbook.model_router import resolve
+﻿"""T11: DashScope 按量 key 最小探测（经路由 deep_research）。不跑实验本体。"""
+import sys
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
+
+from learn.router import resolve
 from dotenv import load_dotenv
 from openai import OpenAI
 

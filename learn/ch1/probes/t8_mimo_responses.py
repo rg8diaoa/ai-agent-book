@@ -1,4 +1,4 @@
-"""T8: MiMo /responses 托管工具探针（官方日志称 2026-06-23 兼容 Responses API）。
+﻿"""T8: MiMo /responses 托管工具探针（官方日志称 2026-06-23 兼容 Responses API）。
 四发一次跑完：裸请求看协议形状；web_search / web_search_preview 两种命名各一发；
 code_interpreter 一发。判读同 T7：看输出项里有没有 web_search_call / code_interpreter_call 回执。
 """
@@ -6,8 +6,8 @@ import os
 import sys
 from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "model_tests" / "infra"))
-from probe_utils import head, post_json, require_key, responses_receipt_types
+sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
+from learn.infra.probe_utils import head, post_json, require_key, responses_receipt_types
 
 key = require_key("MIMO_API_KEY")
 base = os.getenv("MIMO_BASE_URL", "https://api.xiaomimimo.com/v1")

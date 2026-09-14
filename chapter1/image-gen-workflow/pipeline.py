@@ -112,9 +112,9 @@ def rewrite_prompt(requirement: str) -> Tuple[Dict[str, str], Dict[str, Any]]:
     from openai import OpenAI
 
     record = _new_call_record(
-        provider=Config.TEXT_ONLY_PROVIDER,
-        model=Config.TEXT_ONLY_MODEL,
-        endpoint=f"{Config.TEXT_ONLY_BASE_URL}/chat/completions",
+        provider="moonshot",
+        model=Config.REWRITE_MODEL,
+        endpoint=f"{Config.KIMI_BASE_URL}/chat/completions",
     )
     record["request"] = {
         "messages": [
@@ -125,9 +125,9 @@ def rewrite_prompt(requirement: str) -> Tuple[Dict[str, str], Dict[str, Any]]:
     }
     t0 = time.monotonic()
     try:
-        client = OpenAI(api_key=Config.TEXT_ONLY_API_KEY, base_url=Config.TEXT_ONLY_BASE_URL)
+        client = OpenAI(api_key=Config.KIMI_API_KEY, base_url=Config.KIMI_BASE_URL)
         resp = client.chat.completions.create(
-            model=Config.TEXT_ONLY_MODEL,
+            model=Config.REWRITE_MODEL,
             messages=record["request"]["messages"],
         )
         record["response_id"] = resp.id
@@ -152,22 +152,23 @@ def generate_image_wanx(
 ) -> Tuple[bytes, str, List[Dict[str, Any]]]:
     """提交万相文生图异步任务并轮询取图。返回 (图片字节, mime, call records)。"""
     headers = {
-        "Authorization": f"Bearer {Config.IMAGE_WORKFLOW_API_KEY}",
+        "Authorization": f"Bearer {Config.DASHSCOPE_API_KEY}",
         "Content-Type": "application/json",
         "X-DashScope-Async": "enable",
     }
-    submit_url = f"{Config.IMAGE_WORKFLOW_BASE_URL}/services/aigc/text2image/image-synthesis"
-    submit = _new_call_record(Config.IMAGE_WORKFLOW_PROVIDER, Config.IMAGE_WORKFLOW_MODEL, submit_url)
+    submit_url = f"{Config.DASHSCOPE_BASE_URL}/services/aigc/text2image/image-synthesis"
+
+    submit = _new_call_record("dashscope", Config.WANX_MODEL, submit_url)
     submit["request"] = {
         "input": {"prompt": prompt, "negative_prompt": negative_prompt},
-        "parameters": {"size": Config.IMAGE_WORKFLOW_SIZE, "n": 1},
+        "parameters": {"size": Config.WANX_SIZE, "n": 1},
     }
     t0 = time.monotonic()
     try:
         r = requests.post(
             submit_url,
             headers=headers,
-            json={"model": Config.IMAGE_WORKFLOW_MODEL, **submit["request"]},
+            json={"model": Config.WANX_MODEL, **submit["request"]},
             timeout=60,
         )
         body = r.json()
@@ -183,8 +184,8 @@ def generate_image_wanx(
         _finish(submit, t0)
         raise
 
-    poll_url = f"{Config.IMAGE_WORKFLOW_BASE_URL}/tasks/{task_id}"
-    poll = _new_call_record(Config.IMAGE_WORKFLOW_PROVIDER, Config.IMAGE_WORKFLOW_MODEL, poll_url)
+    poll_url = f"{Config.DASHSCOPE_BASE_URL}/tasks/{task_id}"
+    poll = _new_call_record("dashscope", Config.WANX_MODEL, poll_url)
     poll["task_id"] = task_id
     t0 = time.monotonic()
     deadline = t0 + Config.TASK_POLL_TIMEOUT
@@ -216,7 +217,7 @@ def generate_image_wanx(
         _finish(poll, t0)
         raise
 
-    dl = _new_call_record(Config.IMAGE_WORKFLOW_PROVIDER, Config.IMAGE_WORKFLOW_MODEL, image_url.split("?")[0])
+    dl = _new_call_record("dashscope", Config.WANX_MODEL, image_url.split("?")[0])
     t0 = time.monotonic()
     r = requests.get(image_url, timeout=60)
     r.raise_for_status()
@@ -302,18 +303,18 @@ def generate_image_gpt_image(
     from openai import OpenAI
 
     record = _new_call_record(
-        provider=Config.IMAGE_NATIVE_PROVIDER,
-        model=Config.IMAGE_NATIVE_MODEL,
-        endpoint=f"{Config.IMAGE_NATIVE_BASE_URL}/images/generations",
+        provider="openai",
+        model=Config.GPT_IMAGE_MODEL,
+        endpoint=f"{Config.OPENAI_BASE_URL}/images/generations",
     )
     record["request"] = {"prompt": requirement, "size": "1024x1024", "n": 1}
     t0 = time.monotonic()
     try:
         client = OpenAI(
-            api_key=Config.IMAGE_NATIVE_API_KEY, base_url=Config.IMAGE_NATIVE_BASE_URL
+            api_key=Config.OPENAI_API_KEY, base_url=Config.OPENAI_BASE_URL
         )
         resp = client.images.generate(
-            model=Config.IMAGE_NATIVE_MODEL,
+            model=Config.GPT_IMAGE_MODEL,
             prompt=requirement,
             size="1024x1024",
             n=1,

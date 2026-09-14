@@ -19,26 +19,22 @@ from dotenv import load_dotenv
 # 从工作目录向上查找最近的 .env，仓库根目录放一份即可服务所有章节
 load_dotenv()
 
-from agentbook.model_router import resolve
-
 
 class Config:
     """配置类（所有密钥只从环境变量读取，不写入任何文件）"""
 
-    # ---- 改写节点：任务路由 ----
-    _text_only = resolve("text_only")
-    TEXT_ONLY_PROVIDER: str = _text_only["provider"]
-    TEXT_ONLY_API_KEY: str = _text_only["api_key"]
-    TEXT_ONLY_BASE_URL: str = _text_only["base_url"]
-    TEXT_ONLY_MODEL: str = _text_only["model"]
+    # ---- 改写节点 LLM：Kimi（Moonshot）----
+    KIMI_API_KEY: str = os.getenv("KIMI_API_KEY", "") or os.getenv("MOONSHOT_API_KEY", "")
+    KIMI_BASE_URL: str = os.getenv("KIMI_BASE_URL", "https://api.moonshot.cn/v1")
+    REWRITE_MODEL: str = os.getenv("REWRITE_MODEL", "kimi-k3")
 
-    # ---- 工作流路线生图：任务路由（异步任务式 API，base_url 由路由覆盖）----
-    _image_workflow = resolve("image_workflow")
-    IMAGE_WORKFLOW_PROVIDER: str = _image_workflow["provider"]
-    IMAGE_WORKFLOW_API_KEY: str = _image_workflow["api_key"]
-    IMAGE_WORKFLOW_BASE_URL: str = _image_workflow["base_url"]
-    IMAGE_WORKFLOW_MODEL: str = _image_workflow["model"]
-    IMAGE_WORKFLOW_SIZE: str = _image_workflow["params"].get("size", "1024*1024")
+    # ---- 工作流路线生图工具：DashScope 通义万相（国际站）----
+    DASHSCOPE_API_KEY: str = os.getenv("DASHSCOPE_API_KEY", "")
+    DASHSCOPE_BASE_URL: str = os.getenv(
+        "DASHSCOPE_BASE_URL", "https://dashscope-intl.aliyuncs.com/api/v1"
+    )
+    WANX_MODEL: str = os.getenv("WANX_MODEL", "wan2.2-t2i-flash")
+    WANX_SIZE: str = os.getenv("WANX_SIZE", "1024*1024")
 
     # ---- 工作流路线生图工具（首选，实测不可用）：SiliconFlow ----
     SILICONFLOW_API_KEY: str = os.getenv("SILICONFLOW_API_KEY", "")
@@ -55,12 +51,10 @@ class Config:
         "GEMINI_IMAGE_MODEL", "gemini-3-pro-image"
     )
 
-    # ---- 生图节点（原生路线）：任务路由 ----
-    _image_native = resolve("image_native")
-    IMAGE_NATIVE_PROVIDER: str = _image_native["provider"]
-    IMAGE_NATIVE_API_KEY: str = _image_native["api_key"]
-    IMAGE_NATIVE_BASE_URL: str = _image_native["base_url"]
-    IMAGE_NATIVE_MODEL: str = _image_native["model"]
+    # ---- 原生路线 B：OpenAI GPT-Image 2 ----
+    OPENAI_API_KEY: str = os.getenv("OPENAI_API_KEY", "")
+    OPENAI_BASE_URL: str = os.getenv("OPENAI_BASE_URL", "https://api.openai.com/v1")
+    GPT_IMAGE_MODEL: str = os.getenv("GPT_IMAGE_MODEL", "gpt-image-2")
 
     # ---- 运行参数 ----
     TASK_POLL_INTERVAL: float = float(os.getenv("TASK_POLL_INTERVAL", "5"))
@@ -68,7 +62,7 @@ class Config:
 
     @classmethod
     def required_env(cls) -> List[str]:
-        return ["TEXT_ONLY_API_KEY", "IMAGE_NATIVE_API_KEY"]
+        return ["KIMI_API_KEY", "DASHSCOPE_API_KEY", "GEMINI_API_KEY", "OPENAI_API_KEY"]
 
     @classmethod
     def validate(cls) -> bool:

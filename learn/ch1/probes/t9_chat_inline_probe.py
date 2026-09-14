@@ -1,4 +1,4 @@
-"""T9: chat 内联托管工具普查。
+﻿"""T9: chat 内联托管工具普查。
 1) zhipu（glm-5.3-flash）：定位 web_search 的引用字段 + 探测 chat 有无 code_interpreter
 2) agnes（agnes-3.0-flash）：chat 路径是否有内联 web_search / code_interpreter
 """
@@ -6,10 +6,10 @@ import os
 import sys
 from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "model_tests" / "infra"))
+sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
 from openai import OpenAI
 
-from probe_utils import require_key, show_message
+from learn.infra.probe_utils import require_key, show_message
 
 # ---- zhipu ----
 zp = OpenAI(api_key=require_key("ZHIPU_API_KEY"),

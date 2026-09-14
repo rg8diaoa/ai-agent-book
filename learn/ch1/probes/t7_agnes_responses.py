@@ -1,12 +1,12 @@
-"""T7: Agnes /responses 托管工具探针（决定 1-3 能否走 Agnes 而不用百炼）。
+﻿"""T7: Agnes /responses 托管工具探针（决定 1-3 能否走 Agnes 而不用百炼）。
 裸请求 + web_search + code_interpreter 三发；看输出项里有没有托管回执。
 """
 import os
 import sys
 from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "model_tests" / "infra"))
-from probe_utils import head, post_json, require_key, responses_receipt_types
+sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
+from learn.infra.probe_utils import head, post_json, require_key, responses_receipt_types
 
 key = require_key("AGNES_API_KEY")
 base = os.getenv("AGNES_BASE_URL", "https://apihub.agnes-ai.com/v1")
