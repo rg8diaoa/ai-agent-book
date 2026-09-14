@@ -15,6 +15,8 @@ from dataclasses import dataclass, asdict
 import openai
 from game_environment import TreasureHuntGame
 
+from agentbook.model_router import resolve
+
 
 def _reasoning_safe_temperature(model, requested=1.0):
     """Reasoning models (Kimi K3, GPT-5, ...) only accept temperature=1.
@@ -99,6 +101,13 @@ class LLMAgent:
             )
             self.using_openrouter = backend.using_openrouter
             self.provider = backend.provider
+        elif requested_provider == "router":
+            cfg = resolve("text_only")
+            self.api_key = cfg["api_key"]
+            resolved_base_url = cfg["base_url"]
+            self.model = cfg["model"]
+            self.using_openrouter = False
+            self.provider = "router"
         else:
             primary_key = api_key or os.getenv("MOONSHOT_API_KEY")
             self.api_key, resolved_base_url, self.model, self.using_openrouter = \

@@ -61,7 +61,10 @@ class Config:
             routed = model if model.startswith("openai/") else f"openai/{model}"
             return cls.OPENROUTER_API_KEY, cls.OPENROUTER_BASE_URL, routed
         if backend == "dashscope":
-            return cls.DASHSCOPE_API_KEY, cls.DASHSCOPE_BASE_URL, model or cls.DASHSCOPE_MODEL
+            from agentbook.model_router import resolve
+
+            cfg = resolve("deep_research")
+            return cfg["api_key"], cfg["base_url"], model or cfg["model"]
         raise ValueError("backend must be openai, openrouter, or dashscope")
 
     @classmethod

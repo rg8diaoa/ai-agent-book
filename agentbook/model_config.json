@@ -1,0 +1,33 @@
+{
+  "providers": {
+    "zhipu":     { "base_url": "https://open.bigmodel.cn/api/paas/v4", "api_key_env": "ZHIPU_API_KEY" },
+    "agnes":     { "base_url": "https://apihub.agnes-ai.com/v1", "api_key_env": "AGNES_API_KEY" },
+    "mimo":      { "base_url": "https://api.xiaomimimo.com/v1", "api_key_env": "MIMO_API_KEY" },
+    "deepseek":  { "base_url": "https://api.deepseek.com", "api_key_env": "DEEPSEEK_API_KEY" },
+    "dashscope": { "base_url": "https://dashscope.aliyuncs.com/compatible-mode/v1", "api_key_env": "DASHSCOPE_API_KEY" }
+  },
+  "models": {
+    "zhipu/glm-5.3-flash":         { "caps": ["text", "multimodal", "web_search_inline"] },
+    "zhipu/glm-5.3":               { "caps": ["text", "web_search_inline"] },
+    "zhipu/glm-image":             { "caps": ["image_gen"], "notes": "未实测" },
+    "agnes/agnes-3.0-flash":       { "caps": ["text"], "notes": "免费 20 RPM；T3 实测" },
+    "agnes/agnes-image-2.0-flash": { "caps": ["image_gen"], "notes": "T4 实测通过" },
+    "agnes/agnes-video-2.5-flash": { "caps": ["video_gen"], "notes": "未实测" },
+    "mimo/mimo-v2.5-pro":          { "caps": ["text", "web_search_inline"], "notes": "T1 实测；联网插件需开通" },
+    "deepseek/deepseek-v4-flash":  { "caps": ["text"] },
+    "dashscope/wan2.2-t2i-flash":  { "caps": ["image_gen"], "notes": "异步任务式；T12 实测" },
+    "dashscope/qwen3.7-plus":      { "caps": ["text", "responses_api", "hosted_web_search", "hosted_code_interpreter"], "notes": "唯一托管回执栈" }
+  },
+  "routes": {
+    "text_only":     { "model": "zhipu/glm-5.3-flash", "requires": ["text"] },
+    "multimodal":    { "model": "zhipu/glm-5.3-flash", "requires": ["multimodal"] },
+    "inline_search": { "model": "zhipu/glm-5.3-flash", "requires": ["web_search_inline"],
+                       "tools": [ { "type": "web_search", "web_search": { "enable": "True", "search_engine": "search_pro", "search_result": "True" } } ] },
+    "image_workflow": { "model": "dashscope/wan2.2-t2i-flash", "requires": ["image_gen"],
+                        "base_url": "https://dashscope.aliyuncs.com/api/v1",
+                        "params": { "size": "1024*1024" } },
+    "image_native":  { "model": "agnes/agnes-image-2.0-flash", "requires": ["image_gen"] },
+    "web_search_api": { "model": "zhipu/glm-5.3-flash", "requires": ["text"] },
+    "deep_research": { "model": "dashscope/qwen3.7-plus", "requires": ["responses_api", "hosted_web_search", "hosted_code_interpreter"] }
+  }
+}
