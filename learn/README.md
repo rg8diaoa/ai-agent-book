@@ -22,7 +22,8 @@
 | `chN/contracts.py`、`chN/run.py` | 运行适配层（上游契约槽位注入 + 统一启动器） |
 | `router/` | 任务模型路由（`model_config.json` + `model_router.py`） |
 | `infra/` | 探测公共设施（probe_utils）+ 第二轨验收（acceptance_router）+ 路由冒烟（t10） |
-| `HANDOFF.md` | 会话交接文档（新会话 AI 协作者的最小完备上下文，随状态更新） |
+| `handoffs/` | 会话分册交接（tool=工具迭代 / experiment=实验指导） |
+| `HANDOFF.md` | 交接主路由（会话分工路由表 + 跨会话共享状态；铁律见 AGENTS.md） |
 
 分层判据：**证据** = 实验本身的产物记录（`chN/evidence/`，json 正典入库、png 本地重生成）；**影像** = 本人过程截图（`notes/assets/`，不可重生成，供笔记嵌图）；**guides/research** = 照着做 / 查证用。笔记三件套约定与 [deepagenrs-in-action](https://github.com/rg8diaoa/deepagents-in-action) 的 `learn/` 容器同构。
 
