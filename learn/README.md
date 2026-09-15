@@ -15,7 +15,7 @@
 
 | 位置 | 内容 |
 |---|---|
-| `chN/notes/{guides,research}/` | 学习文档（操作手册轨 / 证据核对轨） |
+| `chN/notes/{guides,research,assets}/` | 笔记三件套（guides=叙事层+命令层 / research=坑位层）+ assets 本人截图影像 |
 | `chN/probes/` | 能力探测脚本（每章编号从 t1 重新起） |
 | `chN/evidence/` | 第二轨证据（acceptance_router / run.py 写入；json 入库、png 忽略） |
 | `chN/variants/` | 纯新增变体入口（如 web-search-agent/main_route.py） |
@@ -24,6 +24,8 @@
 | `infra/` | 探测公共设施（probe_utils）+ 第二轨验收（acceptance_router）+ 路由冒烟（t10） |
 | `HANDOFF.md` | 会话交接文档（新会话 AI 协作者的最小完备上下文，随状态更新） |
 
+分层判据：**证据** = 实验本身的产物记录（`chN/evidence/`，json 正典入库、png 本地重生成）；**影像** = 本人过程截图（`notes/assets/`，不可重生成，供笔记嵌图）；**guides/research** = 照着做 / 查证用。笔记三件套约定与 [deepagenrs-in-action](https://github.com/rg8diaoa/deepagents-in-action) 的 `learn/` 容器同构。
+
 ## task ↔ ch 映射表（课程节奏）
 
 > 开营 2026-09-14 ｜ 任务周期 09-17 → 10-05（19 天）｜ ⚠️ **未按时完成 Task 会被报离群**，且截止时间均为**凌晨 03:00**，请提前完成。
@@ -31,7 +33,7 @@
 
 | Task | 主题 | 对应章节 | 截止 | 状态 | 产物位置 |
 |---|---|---|---|---|---|
-| Task 0 | Agent 基础与环境准备 | ch1（实验 1-1 / 1-2 / 1-3 / 1-4 / 7-1&7-2）+ 探测 t1–t12 | 09-17 | ✅ | `ch1/notes/`、`ch1/probes/`、`router/`、`infra/` |
+| Task 0 | Agent 基础与环境准备 | ch1（实验 1-1 / 1-2 / 1-3 / 1-4 / 7-1&7-2）+ 探测 t1–t12 | 09-17 | ✅ | `ch1/notes/`（三件套+assets）、`ch1/probes/`、`router/`、`infra/` |
 | Task 1 | 上下文工程与 Memory / RAG | ch2（上下文工程）+ ch3（用户记忆与知识库） | 09-20 | ⏳ | `ch2/`、`ch3/`（待建） |
 | Task 2 | Tools 与 MCP | ch4（工具与 MCP 协议） | 09-23 | ⏳ | `ch4/`（待建） |
 | Task 3 | Coding Agent 与 Agent 交互 | ch5（Coding Agent 与通用 Agent）+ ch6（交互扩展） | 09-26 | ⏳ | `ch5/`、`ch6/`（待建） |
