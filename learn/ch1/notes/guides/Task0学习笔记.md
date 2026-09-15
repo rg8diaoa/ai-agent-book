@@ -96,6 +96,8 @@ uv 缓存目录在 C 盘、项目在 E 盘，跨盘符无法硬链接报 warning
 
 - 证据：[20260914T162109\_run\_context.json](../../evidence/20260914T162109_run_context.json)｜[20260915T0021\_context\_run2\_results.json](../../evidence/20260915T0021_context_run2_results.json)
 
+- 可视化（书图预期 vs 本机实测，由上方 run2 json 重生成，不入 evidence/）：![context 消融：书图预期 vs 本机实测](../assets/20260915_step8_ablation_expect_vs_actual.svg)
+
 🖊️ 精校：windows下问题不少，给所有报错都处理了，值得记录的就只有emoji报错和子进程静默，全部修改的适配层代码，不影响原仓代码。
 
 ## 收尾 · 归档与入库 ✅

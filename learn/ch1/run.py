@@ -9,6 +9,7 @@
 import argparse
 import json
 import os
+import shutil
 import subprocess
 import sys
 import threading
@@ -28,6 +29,28 @@ ENTRIES = {
     "learning-from-experience": ROOT / "chapter1" / "learning-from-experience" / "experiment.py",
     "context": ROOT / "chapter1" / "context" / "main.py",
 }
+
+
+def transcribe_artifacts(exp: str, cwd: Path, evidence_dir: Path, ts: str) -> list:
+    """按 contracts.artifacts(exp) 声明，把 cwd 下命中的上游产物原样复制改名进 evidence_dir。
+
+    纯复制（shutil.copy2），不解析、不改写、不重组；目标同名已存在则跳过不覆盖。
+    """
+    copied: list = []
+    for pattern in contracts.artifacts(exp):
+        hits = [p for p in sorted(cwd.glob(pattern)) if p.is_file()]
+        if not hits:
+            print(f"[adapter] 上游产物：无匹配（{pattern}）")
+            continue
+        for hit in hits:
+            dest = evidence_dir / f"{ts}_{exp}_{hit.name}"
+            if dest.exists():
+                print(f"[adapter] 上游产物：目标已存在，跳过 {dest.name}")
+                continue
+            shutil.copy2(hit, dest)
+            copied.append(dest)
+            print(f"[adapter] 已转录上游产物 {hit.name} -> {dest.name}")
+    return copied
 
 
 def main() -> int:
@@ -109,6 +132,7 @@ def main() -> int:
             "generated_utc": datetime.now(timezone.utc).isoformat(),
         }, ensure_ascii=False, indent=2, default=str), encoding="utf-8")
         print(f"🧾 证据已写 {out.relative_to(ROOT)}")
+        transcribe_artifacts(args.exp, cwd, EVIDENCE_DIR, ts)
         if proc.returncode != 0:
             print(f"[adapter] 子进程 exit={proc.returncode}，详见上方输出与证据 json", file=sys.stderr)
         return proc.returncode

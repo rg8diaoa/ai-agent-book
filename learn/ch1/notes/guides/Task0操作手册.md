@@ -76,6 +76,22 @@ git check-ignore .env           # 有输出 = 已被排除 ✓
 
 **验证**：终端流式输出正常（无静默、无 GBK 报错）→ 消融结果表 / 对比矩阵 / 分析总结依次打印 → `learn\ch1\evidence\` 落 json。
 
+**证据可视化**（可选）：从 evidence json 重生成「书图预期 vs 实测」对照图，产物入 `notes/assets/`（图属可视化，不入 evidence/）：
+
+```powershell
+.venv\Scripts\python.exe learn\infra\render_ablation_figure.py --input learn\ch1\evidence\20260915T0021_context_run2_results.json --output learn\ch1\notes\assets\20260915_step8_ablation_expect_vs_actual.svg
+```
+
+**中文 HTML 报告**（研究型界面，自动识别输入形状；SVG 速览与本报告互补）：
+
+```powershell
+# 本机实测（第二轨 summary 形状）
+.venv\Scripts\python.exe learn\infra\render_report.py --input learn\ch1\evidence\20260915T0021_context_run2_results.json --open
+# 上游验收 json（arms 形状，作者基线轨数据）也可渲染
+.venv\Scripts\python.exe learn\infra\render_report.py --input chapter1\context\validation\latest.json
+# 其他实验同理（search-codegen / image-gen-workflow / learning-from-experience 的 validation json）
+```
+
 ## Step 9：其余实验补做（⏳ 未做，后续继续）
 
 Task 0 截止时仅完成实验 1-1（context）；以下 4 个实验待补做，跑法均已就绪（改过 `model_config.json` 后先跑路由冒烟）：

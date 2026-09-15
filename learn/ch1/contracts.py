@@ -88,6 +88,15 @@ _CONTRACTS = {
                 "args": lambda: contract_context()["args"]},
 }
 
+ARTIFACTS = {
+    "context": ("ablation_results.json", "task_result_*.json"),
+}
+
+
+def artifacts(exp: str) -> tuple[str, ...]:
+    """实验 exp 声明的上游产物文件名清单（相对 cwd，支持 * 通配；未知实验返回空）。"""
+    return tuple(ARTIFACTS.get(exp, ()))
+
 
 def apply_env(exp: str) -> dict:
     """装载根 .env 后，把实验 exp 的契约 env 写入 os.environ，返回该 env dict。"""
